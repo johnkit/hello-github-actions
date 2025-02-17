@@ -1,7 +1,8 @@
 name: A workflow for my Hello World file
 on:
-  push:
-    tags: test/*
+  issues
+  # push:
+  #   tags: test/*
 
 env:
   GITHUB_REGISTRY: ghrc.io
@@ -14,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo my_name is ${MY_NAME}, ref_name is ${REF_NAME};
-      - run: echo prefix ${REF_NAME#*/}, suffix is ${REF_NAME%/*};
+      - run: echo prefix ${REF_NAME%/*}, suffix is ${REF_NAME#*/};
+      - run: echo labels ${{ github.event.issue.labels }};
+      - run: echo labels ${{ github.event.issue.labels.name }};
+      # - run: echo explicit tag name is ${EXPLICIT_TAG_NAME}
       # - uses: actions/checkout@v4
       # - uses: ./action-a
       #   with:
