@@ -1,6 +1,7 @@
 name: A workflow for my Hello World file
 on:
-  issues
+  issues:
+    types: [opened, edited]
   # push:
   #   tags: test/*
 
@@ -8,6 +9,7 @@ env:
   GITHUB_REGISTRY: ghrc.io
   MY_NAME: john
   REF_NAME: ${{ github.ref_name }}
+  # LABELS: ${{ github.event.issue.labels }}
 
 jobs:
   build:
@@ -16,8 +18,17 @@ jobs:
     steps:
       - run: echo my_name is ${MY_NAME}, ref_name is ${REF_NAME};
       - run: echo prefix ${REF_NAME%/*}, suffix is ${REF_NAME#*/};
-      - run: echo labels ${{ github.event.issue.labels }};
-      - run: echo labels ${{ github.event.issue.labels.name }};
+
+      - uses: actions/checkout/@v4
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+      - run: echo latest tag ${{ steps.get-latest-tag.outputs.tag }}
+
+      # - run: echo labels "${LABELS[*]}";
+      - run: echo found lable "build"
+        if: contains(github.event.issue.labels.*.name, 'build')
+
+
       # - run: echo explicit tag name is ${EXPLICIT_TAG_NAME}
       # - uses: actions/checkout@v4
       # - uses: ./action-a
