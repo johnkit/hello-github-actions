@@ -18,12 +18,16 @@ jobs:
       test_string: xyzzy
     steps:
       - uses: actions/checkout/@v4
+        with:
+          fetch-depth: 0
       - run: echo IMAGE_NAME is ${IMAGE_NAME}
       - run: echo env.IMAGE_NAME double is ${{ env.IMAGE_NAME }}
 
+      - run: echo $(git describe --tags --match="test/*" --abbrev=0)
       - run: echo $(git describe --tags --match="${IMAGE_NAME}/*" --abbrev=0)
       - id: get-repo-tag
-        run: echo $(git describe --tags --match="${IMAGE_NAME}/*" --abbrev=0) >> "$GITHUB_OUTPUT"
+        # No command substitution because I just cannot figure it out
+        run: echo tag=$(git describe --tags --match="test/*" --abbrev=0) >> "$GITHUB_OUTPUT"
 
   build:
     # if: contains(github.event.issue.labels.*.name, 'build')
