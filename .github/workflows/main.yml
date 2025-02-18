@@ -26,8 +26,9 @@ jobs:
 
       - run: echo $(git describe --tags --match="test/*" --abbrev=0)
       - run: echo $(git describe --tags --match="${IMAGE_NAME}/*" --abbrev=0)
+      - run: echo REPO_TAG=$(git describe --tags --match="${IMAGE_NAME}/*" --abbrev=0) >> $GITHUB_ENV
       # No command substitution because I just cannot figure it out
-      - run: echo REPO_TAG=$(git describe --tags --match="test/*" --abbrev=0) >> $GITHUB_ENV
+      # - run: echo REPO_TAG=$(git describe --tags --match="test/*" --abbrev=0) >> $GITHUB_ENV
       - run: echo check REPO_TAG is $REPO_TAG, image_version is ${REPO_TAG#*/}
       - id: get-image-version
         run: echo image_version=${REPO_TAG#*/} >> $GITHUB_OUTPUT
