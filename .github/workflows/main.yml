@@ -11,13 +11,14 @@ env:
   IMAGE_NAME: test
 
 jobs:
-  get-image-tag:
+  get-image-version:
     runs-on: ubuntu-latest
     outputs:
-      image_tag: ${{ steps.get-repo-tag.outputs.tag }}
+      image_version: ${{ steps.get-image-version.outputs.image_version }}
       test_string: xyzzy
     steps:
       - uses: actions/checkout/@v4
+        # Need following option to "fetch all history for all tags"
         with:
           fetch-depth: 0
       - run: echo IMAGE_NAME is ${IMAGE_NAME}
@@ -25,23 +26,25 @@ jobs:
 
       - run: echo $(git describe --tags --match="test/*" --abbrev=0)
       - run: echo $(git describe --tags --match="${IMAGE_NAME}/*" --abbrev=0)
-      - id: get-repo-tag
-        # No command substitution because I just cannot figure it out
-        run: echo tag=$(git describe --tags --match="test/*" --abbrev=0) >> "$GITHUB_OUTPUT"
+      # No command substitution because I just cannot figure it out
+      - run: echo REPO_TAG=$(git describe --tags --match="test/*" --abbrev=0) >> $GITHUB_ENV
+      - run: echo check REPO_TAG is $REPO_TAG, image_version is ${REPO_TAG#*/}
+      - id: get-image-version
+        run: echo image_version=${REPO_TAG#*/} >> $GITHUB_OUTPUT
 
   build:
     # if: contains(github.event.issue.labels.*.name, 'build')
     name: Hello world action
     runs-on: ubuntu-latest
-    needs: get-image-tag
+    needs: get-image-version
     steps:
       - run: echo my_name is ${MY_NAME}, ref_name is ${REF_NAME} .
       - run: echo prefix ${REF_NAME%/*}, suffix is ${REF_NAME#*/} .
 
-      - run: echo test_string is ${{ needs.get-image-tag.outputs.test_string }}
-      - run: echo input string is ${{ needs.get-image-tag.outputs.image_tag }}
-      - run: echo "IMAGE_TAG=${{ needs.get-image-tag.outputs.image_tag }}" >> $GITHUB_ENV
-      - run: echo "IMAGE_TAG is ${IMAGE_TAG}"
+      - run: echo test_string is ${{ needs.get-image-version.outputs.test_string }}
+      - run: echo image_version is ${{ needs.get-image-version.outputs.image_version }}
+      # - run: echo "IMAGE_TAG=${{ needs.get-image-tag.outputs.image_tag }}" >> $GITHUB_ENV
+      # - run: echo "IMAGE_TAG is ${IMAGE_TAG}"
 
       # - uses: actions/checkout/@v4
       # - uses: actions-ecosystem/action-get-latest-tag@v1
