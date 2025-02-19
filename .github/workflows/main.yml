@@ -1,18 +1,37 @@
-name: Test Version File
+name: Test Docker Build with Version File
 on:
   workflow_dispatch
 env:
-  GITHUB_REGISTRY: ghrc.io
+  GITHUB_REGISTRY: ghcr.io
   IMAGE_NAME: test
 
 jobs:
   get-version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout/@v4
       - run: echo IMAGE_NAME is ${IMAGE_NAME}
       - run: echo env.IMAGE_NAME double is ${{ env.IMAGE_NAME }}
 
-      - run: echo IMAGE_VERSION=$(cat main.version.txt | xargs) >> $GITHUB_ENV
+      - name: Checkout the repo
+        uses: actions/checkout/@v4
+
+      - name: Login to ${{ env.GITHUB_REGISTRY}}
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login -u ${{ github.actor }} --password-stdin ${{ env.GITHUB_REGISTRY }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get image version
+        run: echo IMAGE_VERSION=$(cat main.version.txt | xargs) >> $GITHUB_ENV
       - run: echo IMAGE_VERSION is ${IMAGE_VERSION}
-      - run: echo ${GITHUB_REPOSITORY}/${{ github.repository_owner }}/${IMAGE_NAME}:${IMAGE_VERSION}
+      - run: echo ${{ env.GITHUB_REGISTRY }}/${{ github.repository_owner }}/${IMAGE_NAME}:${IMAGE_VERSION}
+
+      - name: Build and push using buildx
+        run: |
+          docker buildx create --use
+          docker buildx inspect
+          docker buildx build \
+          --platform linux/amd64 \
+          -t ${{ env.GITHUB_REGISTRY }}/${{ github.repository_owner }}/${IMAGE_NAME}:${IMAGE_VERSION} \
+          -f main.dockerfile \
+          --push .
